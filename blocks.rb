@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 # Ch4 - Blocks and enumeration
 
 # Review of word frequency, tally, and tap
