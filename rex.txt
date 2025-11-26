@@ -1,0 +1,26 @@
+Hash[]
+hash.fetch(:key)
+Date.today.to_s == Date.today.strftime("%Y-%m-%d")
+What does [*1..10] do?
+Review strftime syntax
+arr#zip
+.equal? vs == vs eql?
+What does this return and why?: [1,2,3] - [4,2,3]
+Inheritance of class variables
+Some File stuff
+Some Error stuff
+
+What does each item in this array equal:
+arr = [
+  "a".to_i(36),
+  "070".to_i(0),
+  nil.to_i,
+  "0b0001".to_i
+]
+
+What does this return and why?
+a = [1, 2, 5, 7, 8]
+b = [1, 3, 6, 7, 9]
+c =  nil || a & b | a && a | b
+p c
+
