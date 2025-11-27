@@ -24,3 +24,35 @@ b = [1, 3, 6, 7, 9]
 c =  nil || a & b | a && a | b
 p c
 
+*11/26/2025*
+
+p "Apple-Banana-Lemon".split /(-)/
+
+
+$val = 0
+
+class Count
+  def self.up
+    $val = $val + 1
+    $val == 3 ? true : false
+  end
+end
+
+[*1..10].select do
+  Count.up
+end
+
+p $val
+
+What is hash.default_proc?
+
+hash.values vs hash.values_at
+
+Know common has methods like:
+clear, merge, to_h, dig, fetch, transform_values, invert
+select, reject, compact, keys, values, key?
+
+hoge = *"a"
+hoge.class
+
+
