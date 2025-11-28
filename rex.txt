@@ -55,4 +55,78 @@ select, reject, compact, keys, values, key?
 hoge = *"a"
 hoge.class
 
+What does arr.each_cons do?
+arr = (1..30).to_a
+container = []
 
+arr.each_cons(7) do |i|
+  container << i
+end
+
+p container.length
+
+puts "10G".to_i, "G10".to_i
+
+Why is this 6?
+x = 0
+
+4.times do |i|
+  x += i
+end
+
+p x
+
+What does this return and why?
+hoge = 0
+def hoge
+  x = 0
+  5.times do |i|
+    x += 1
+  end
+  x
+end
+puts hoge
+
+What to put as arg to Date.today.strftime(arg) to get YYYY-MM-DD? MM/DD/YY?
+
+strftime(%D) vs strftime(%x)
+
+Know these:
+strftime(%a)
+strftime(%A)
+strftime(%w)
+strftime(%b)
+strftime(%B)
+strftime(%p)
+strftime(%Z)
+
+
+What does this puts?
+def hoge(n)
+  unless n != 3
+    "hello"
+  elsif n == 5
+    "world"
+  end
+end
+
+str = ''
+str.concat hoge(3)
+str.concat hoge(5)
+
+puts str
+
+Know string formatting like:
+p "Hello%d" % 5
+
+Common string placeholders
+%d
+%s
+%f
+%x
+
+What method is the same as arr.delete_if?
+
+Know File class methods like:
+File.chmod
+File.delete
