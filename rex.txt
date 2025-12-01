@@ -56,10 +56,17 @@ hoge = *"a"
 hoge.class
 
 What does arr.each_cons do?
+
+What is the difference with arr.each_slice(num)?
+
 arr = (1..30).to_a
 container = []
 
 arr.each_cons(7) do |i|
+  container << i
+end
+
+arr.each_slice(7) do |i|
   container << i
 end
 
@@ -130,3 +137,51 @@ What method is the same as arr.delete_if?
 Know File class methods like:
 File.chmod
 File.delete
+
+What does hash.member? do?
+
+What does hash.update do?
+
+What does raise ['Error Message'] result in and why?
+
+a, = (1..5).partition(&:odd?)
+p a
+
+Which mode in XXXX to get a file with
+```
+recode 1
+recode 2?
+```
+File.open('testfile.txt', XXXX) do |f|
+  f.write("recode 1\n")
+  f.seek(0, IO::SEEK_SET)
+  f.write("recode 2\n")
+end
+
+What does this return?
+# list.txt
+1
+2
+3
+4
+
+while not io.eof?
+  io.readlines
+  io.seek(0, IO::SEEK_CUR)
+  p io.readlines
+end
+
+What does this return?
+# text.txt
+REx
+Silver
+REx
+Gold
+
+IO.read("text.txt", 3, offset = 1)
+
+Know the different heredoc options:
+<<-EOF
+<<~EOF
+<<EOF
+
