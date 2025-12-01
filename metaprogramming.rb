@@ -128,5 +128,145 @@ d1.greet
 puts d1.singleton_methods
 puts d1.singleton_class
 d2.greet
-puts d2.singleton_methods
+
+# This adds class methods because extend adds to self
+
+class Person
+    extend Greeter
+end
+
+Person.greet
+
+# Any changes we make with prepend and monkey patches are global
+# The changes also affect the libraries and gems we use!
+# Refinements allow for local changes to classes (but they are rarely used)
+
+
+module MyPrint
+    refine Object do
+        private def print(*args)
+            args.each do |arg|
+                Kernel.print("Remy says: #{arg}\n")
+            end
+        end
+    end
+end
+
+class Person
+    using MyPrint
+
+    def initialize(name)
+        @name = name
+    end
+
+    def message(msg)
+        print(msg)
+    end
+end
+
+
+p.message("Nice to meet you!")
+
+# Class-level macros
+
+class Logger
+    def self.add_logging(name)
+        define_method(:log) do |msg|
+            now = Time.now.strftime("%x")
+            $stderr.puts("#{now}-#{public_send(name)}: #{self} #{msg}")
+        end
+    end
+end
+
+class Event < Logger
+    attr_accessor :name
+    add_logging :name # this is the class-level macro!
+    
+    def initialize(name)
+        @name = name
+    end
+    
+end
+
+umf = Event.new("Ultra Music Festival")
+
+umf.log("Registration has begun.")
+umf.log("Tickets have sold out!")
+
+# Other interesting metaprogramming methods include:
+# send, instance_variable_set, instance_variable_get, class_eval, instance_eval, etc.
+
+# We can also use a module to hold metaprogramming payload
+
+module AttrLogger
+    def attr_logger(name)
+        attr_reader name
+
+        define_method("#{name}=") do |val|
+            puts "Assigning #{val.inspect} to #{name}"
+            instance_variable_set("@#{name}", val)
+        end
+    end
+end
+
+class Event
+    extend AttrLogger
+    attr_logger :value
+end
+
+umf.value = "Fun"
+puts "The value of #{umf.name} is #{umf.value}"
+
+# extend class if self.included? (Including instance and class methods together)
+# The Concern pattern (Rails)
+
+module GeneralLogger
+    puts "self = #{self}"
+    def log(msg) # will be added as an instance method
+        puts "self = #{self}"
+        puts "#{Time.now.strftime("%y-%m-%d")}-#{self.name}-#{msg}"
+    end
+
+    module ClassMethods # will be added as class methods
+        puts "self = #{self}"
+        def attr_logger(name)
+            attr_reader name
+
+            define_method("#{name}=") do |val|
+                log("Assigning #{val.inspect} to #{name}")
+                instance_variable_set("@#{name}", val)
+            end
+        end
+    end
+
+    def self.included(host_class)
+        puts "#{host_class} just hosted #{self}"
+        host_class.extend(ClassMethods)
+    end
+end
+
+class Person
+    puts "self = #{self}"
+    include GeneralLogger #first puts message
+
+    attr_logger :name
+end
+
+james = Person.new("James")
+james.log("New person created") #instance method
+puts james.name
+james.name = "Jim" #comes from the attr_logger class method
+puts james.name
+
+# Structs and sub-classing
+
+Dog = Struct.new(:name, :breed, :likes) do
+    def to_s
+        "#{name} is a #{breed} and likes #{likes}"
+    end
+end
+
+lola = Dog.new("Lola", "Poodle", "Playing fetch")
+p lola
+puts lola
 
