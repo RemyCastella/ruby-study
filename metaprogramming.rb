@@ -270,3 +270,197 @@ lola = Dog.new("Lola", "Poodle", "Playing fetch")
 p lola
 puts lola
 
+# Immutable structs
+
+CustomerRecord = Data.define(:total_spend, :language)
+customer1 = CustomerRecord.new(total_spend: 500, language: "Japanese")
+p customer1
+p customer1.to_h
+# customer1[:total_spend] = 600 <= This doesn't work!
+
+customer2 = customer1.with(total_spend: 800)
+p customer2
+
+# Creating classes dynamically
+# We can call Class.new (superclass of every class we create, which has #new)
+
+cuisine = Class.new(String) do 
+    def self.class_method
+        puts "This is a class method"
+    end
+
+    def instance_method
+        puts "This is an instance method"
+    end
+
+    def caps
+        puts self.upcase
+    end
+end
+
+puts cuisine.superclass
+cuisine.class_method
+japanese = cuisine.new("sushi")
+japanese.instance_method
+japanese.caps
+
+# instance_eval and class_eval
+# these methods let you set self to an arbitrary object and run code in a block with that object as self, and then reset self
+
+"dog".instance_eval do
+    puts self
+    puts upcase
+    puts "This is as if we are in the singleton class of \"dog\""
+end
+
+Person.class_eval do
+    p self
+    def instance_method
+        puts "We can set instance methods with class_eval"
+        puts "This is as if we are in the class definition of #{self.class}"
+    end
+end
+
+p.instance_method
+
+# We can also use instance_eval for classes to set class methods
+# this is because it sets singleton methods for the receiver
+
+Person.instance_eval do
+    def class_method
+        puts "This is a class method of #{self}"
+    end
+end
+
+Person.class_method
+p Person.singleton_methods
+
+# We can pass block arguments with instance_exec and class_exec
+
+meat = "Chicken"
+"Parmesan".instance_exec(meat) do |meat|
+    puts "#{meat} and #{self}"
+end
+
+# Hook methods - methods that Ruby calls from within the interpreter when some event occurs
+# examples include:
+# method_added, method_missing, method_removed, method_undefined (and singleton_method_... versions)
+# extended, included, inherited, initialize_clone, append_features (and other class/module related hooks)
+
+# inherited (basic example)
+
+class Animal
+    @children = []
+
+    def self.inherited(child)
+        puts "#{child} has inherited from #{self}"
+        @children << child
+    end
+
+    class << self
+        attr_reader :children
+    end
+end
+
+class Flamingo < Animal
+end
+
+class Parakeet < Animal
+end
+
+p Animal.children
+
+
+# inherited (shipping example)
+
+class Shipping
+    @children = []
+
+    def self.inherited(child)
+        @children << child
+    end
+
+    def self.shipping_options(weight, international)
+        @children.select{ |child| child.can_ship(weight, international) }
+    end
+end
+
+class LetterPackLight < Shipping
+    def self.can_ship(weight, international)
+        weight < 4000 && !international
+    end
+end
+
+class KuronekoYamato < Shipping
+    def self.can_ship(weight, international)
+        weight > 4000 && !international
+    end
+end
+
+class EMS < Shipping
+    def self.can_ship(weight, international)
+        international
+    end
+end
+
+p Shipping.shipping_options(3000, false)
+p Shipping.shipping_options(5000, false)
+p Shipping.shipping_options(3000, true)
+
+# method_missing(:name, *args, &block)
+
+class Transportation
+    UNDER_DEVELOPMENT = [:levitate]
+
+
+    def method_missing(name, *args, &block)
+        if name_handled_by_method_missing?(name)
+            puts "Transportation method \"#{name}\" is currently under development!"
+        else
+            super
+        end
+    end
+
+    def respond_to_missing?(name, include_private = false) # another hook method, gets called inside respond_to?, after no method is found
+        name_handled_by_method_missing?(name)
+    end
+
+    private
+
+    def name_handled_by_method_missing?(name)
+        UNDER_DEVELOPMENT.include?(name)
+    end
+end
+
+maglev = Transportation.new
+wardrobe = Transportation.new
+maglev.levitate("Kofu")
+p maglev.respond_to?(:levitate) # this invokes respond_to_missing? method
+# wardrobe.teleport("Narnia") <= This will raise
+
+# The top-level environment is in a predefined object called main
+# top-level methods become private instance methods of class Object
+
+puts self
+puts self.class
+
+# top-level methods are available inside all objects
+
+def introduce
+    "Hello, I am #{self.to_s}"
+end
+
+class Person
+    attr_reader :name
+
+    def to_s
+        name
+    end
+
+    def meet
+        puts introduce
+    end
+end
+
+person10 = Person.new("Remy")
+person10.meet
