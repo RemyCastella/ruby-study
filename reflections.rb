@@ -1,3 +1,6 @@
+require "yaml"
+require "json"
+
 # Programs can discover the following information about itself:
 # What objects it contains, its class hierarchy, attributes/methods of objects, information on methods
 # ObjectSpace - let's you see objects that have been created and not yet destroyed by garbage collection
@@ -220,3 +223,91 @@ def method_c
 end
 
 method_c
+
+# Source code
+
+puts File.read(__FILE__)
+
+puts "The current file is: #{__FILE__}"
+
+# The Ruby VM - we can see the intermediate code the VM is executing to run our program
+# We can compile code (as a string or file), and disassemble it
+
+code = RubyVM::InstructionSequence.compile('a = 1')
+puts code.disassemble
+
+# Marshaling - serializing our code
+
+Ingredient = Struct.new(:name) do
+    def to_s
+        name.to_s
+    end
+end
+
+class Recipe
+    def initialize(ingredients)
+        @ingredients = ingredients
+    end
+
+    def cook
+        @ingredients.join("🍳")
+    end
+end
+
+r = Recipe.new(
+    [
+        Ingredient.new("Onions"),
+        Ingredient.new("Chicken"),
+        Ingredient.new("Eggs"),
+        Ingredient.new("Rice")
+    ]
+)
+
+File.open("oyakodon", "w+") do |f|
+    Marshal.dump(r, f)
+end
+
+recipe = Marshal.load(File.open("oyakodon"))
+puts recipe.cook
+
+# Bindings, procedure objects, instances of class IO, and singleton objects cannot be dumped (saved outside of the Ruby environment)
+
+# Using YAML and JSON for marshalling (for more generalized serialization)
+
+class Serializer
+    def initialize(value)
+        @value = value
+    end
+
+    def encode_with(properties) # this method allows us to serialize to YAML
+        properties["value"] = @value
+    end
+
+    def self.from_json(json_string)
+        result = JSON.parse(json_string) # we need this to turn JSON => ruby hash
+        Serializer.new(result["value"]) # create and return self with value
+    end
+
+    def to_json 
+        JSON.dump( # we need to this to create JSON
+            {
+                value: @value
+            }
+        )
+    end
+
+    def to_s
+        "#{@value}"
+    end
+end
+
+obj = Serializer.new("Ohtainyan is a male blue calico cat")
+puts obj
+puts yaml_data = YAML.dump(obj)
+p yaml_data
+obj = YAML.load(yaml_data, permitted_classes: [Serializer])
+puts obj
+
+puts json_data = obj.to_json
+puts Serializer.from_json(json_data)
+
