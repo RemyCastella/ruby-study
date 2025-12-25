@@ -206,6 +206,136 @@ p InfiniteStream.new.all
   .first(3)
 ```
 
+### Array Methods
+
+```ruby
+arr = (1..10).to_a
+arr2 = [[[1,2]],3,4,5]
+arr3 = [5,2,6,1,7,3,8,99]
+arr4 = [5,2,7,4,3,7,8,9]
+
+# Rotation
+p arr.rotate       # rotate left by 1
+p arr.rotate(5)    # rotate left by 5
+p arr.rotate(-2)   # rotate right by 2
+
+# Flattening and joining
+p arr2.flatten     # fully flatten
+p arr2.flatten(1)  # flatten one level
+p arr2.join("|")   # join with separator
+
+# Randomization
+p arr.sample       # random element
+p arr.shuffle      # random order
+
+# Comparison and set operations
+p arr <=> arr3             # spaceship comparison
+p arr3 - arr4              # difference
+p arr2 * ","               # join (same as join)
+p arr.intersection(arr2, arr3, arr4)
+p arr.union(arr2, arr3, arr4)
+p arr.bsearch{ |i| i > 5 } # binary search (array must be sorted)
+```
+
+### Custom Enumerable Classes
+
+The Enumerable module looks for an `each` method in an including class for all of its functionality:
+
+```ruby
+class Students
+    include Enumerable
+
+    def initialize(*students)
+        @students = students.flatten
+    end
+
+    def add_student(student)
+        @student << student
+    end
+
+    def each
+        @students.each do |student|
+            yield student
+        end
+    end
+end
+
+my_students = Students.new("Tanaka", "Nishiyama", "Yamamoto", "Takashima")
+
+# Enumerable methods available
+p my_students.map{ |student| student.upcase }  # alias: collect
+my_students.cycle(3){ |student| print "#{student}\n" }
+my_students.reverse_each{ |student| p student }
+my_students.each_with_index{ |student, index| puts "#{index + 1}. #{student}"}
+p my_students.take(2)
+p my_students.drop(2)
+p my_students.take_while{|student| student.match?(/t/i)}
+p my_students.drop_while{|student| student.match?(/t/i)}
+p my_students.group_by{ |student| student[0]}
+p my_students.zip([1,2,3,4])
+p my_students.find{|student| student.start_with?("T")}    # alias: detect
+p my_students.select{|student| student.start_with?("T")}  # alias: find_all, filter
+p my_students.grep("Tanaka"){|student| student.downcase}
+p my_students.count{|student| student.start_with?("T")}
+p my_students.include?("Sahara")
+p my_students.any?{|student| student.start_with?("N")}
+p my_students.all?{|student| student.length > 3}
+p my_students.sort_by(&:length)
+```
+
+### Slicing and Reducing
+
+```ruby
+arr = (1..10).to_a
+p arr.each_slice(3).map{|slice| slice }.length  # groups of 3
+p arr.each_cons(3).map{|slice| slice }.length   # consecutive groups of 3
+p arr.reduce(100, :+)  # alias: inject
+p arr.partition{|num| num.odd?}
+p arr.slice_after{ |n| n.even? }.to_a
+p arr.slice_before{ |n| n.even? }.to_a
+```
+
+### Hash Methods
+
+```ruby
+# Default value with block (avoids shared reference issue)
+h = Hash.new{|hash, key| hash[key] = []}
+h[:a] << "Tanaka"
+h[:b] << "Sato"
+p h
+
+p h.default_proc
+p h.default
+
+# Fetching values
+p h.fetch(:f, default_value = [])
+p h.values_at(:a, :b)
+p h.dig(:a, 0)  # nested access
+
+# Transforming
+p h.merge({z: ["Iino"]})
+p h.values.flatten
+p h.invert
+p h.transform_values{|val| val.map(&:upcase) }
+h.clear
+```
+
+### Set Operations
+
+```ruby
+s1 = [1, 1, 2, 2, 3, 4, 5, 6, 6, 7, 7, 8, 9, 9, 9].to_set
+p s1
+
+raw_data = [1,1,1,1,"two","two",2,2,4,4,4,5, "five", "five", "five"]
+s2 = Set.new(raw_data)
+s3 = Set[1,2,3]
+
+p s2
+p s1.merge(s2)
+p s3 < s1      # subset check
+p s1 === 4     # membership check
+```
+
 ---
 
 ## core_data_types.rb
@@ -1032,6 +1162,13 @@ class Cat < Animal  # prints: "Cat inherited Animal"
 end
 ```
 
+### The itself Method
+
+```ruby
+you = Animal.new
+p you.itself  # returns the object itself
+```
+
 ---
 
 ## reflections.rb
@@ -1527,3 +1664,134 @@ Key Ractor concepts:
 - Ractors are isolated (can't access external variables)
 - Communication via `send` and `receive`
 - Each Ractor is like a "room" with single entry/exit
+
+---
+
+## library_reference.rb
+
+### CSV Processing
+
+```ruby
+require 'csv'
+# Methods include parse, open, foreach, read, etc.
+
+CSV.foreach("#{__dir__}/data.csv", headers: true) do |row|
+    puts row["Username"]
+end
+```
+
+### Directory Operations
+
+```ruby
+dir = Dir.new("#{__dir__}")
+p dir
+Dir.open("#{__dir__}"){ |dir| p dir }
+p dir.select{ |file| !file.end_with?(".rb") }
+p Dir.glob("./*.md")
+p Dir.pwd
+
+# Destructive methods: Dir.rmdir, Dir.delete, Dir.unlink
+```
+
+### File Metadata and Operations
+
+```ruby
+file = File.new("testfile.txt", "a+")
+file.chmod(0644)
+file.chown(501, 20)
+p File.basename("testfile")
+p File.dirname("testfile")
+p File.birthtime("testfile.txt")
+p File.atime("testfile.txt")
+p File.exist?("testfile.txt")
+File.delete("testfile.txt")
+```
+
+### IO.popen and StringIO
+
+```ruby
+# Know the difference between `date`, system("date"), and IO.popen("date")
+result = IO.popen("date")
+p result.read
+
+date = IO.popen("date")
+string_file = StringIO.new(date.read)
+p string_file.read
+string_file.rewind  # reset position
+p string_file.read
+```
+
+### JSON Processing
+
+```ruby
+require 'json'
+
+data = {
+    username: "coolUser12",
+    email: "email@gmail.com",
+    friends: ["Jason", "John", "James"]
+}
+
+p json = JSON.generate(data)  # data.to_json also works
+p JSON.parse(json, symbolize_names: true)
+```
+
+### URI Parsing
+
+```ruby
+require 'uri'
+
+uri = URI.parse("https://9gag.com/trending")
+p uri.scheme  # => "https"
+p uri.host    # => "9gag.com"
+p uri.port    # => 443
+p uri.path    # => "/trending"
+```
+
+### YAML Serialization
+
+```ruby
+require 'yaml'
+
+data = { username: "coolUser12", email: "email@gmail.com" }
+yaml = YAML.dump(data)
+puts yaml
+```
+
+### Benchmarking
+
+```ruby
+require 'benchmark'
+
+str = "Hello, this is a string!"
+
+Benchmark.bm(10) do |x|
+    x.report("direct"){10_000.times{str.length}}
+    x.report("send"){10_000.times{str.send(:length)}}
+    x.report("eval"){10_000.times{eval("str.length")}}
+end
+```
+
+### Singleton Pattern
+
+```ruby
+require 'singleton'
+
+class A
+    attr_accessor :data
+    include Singleton
+end
+
+# a = A.new  # new becomes private method
+# clone, dup, etc. are also overwritten
+# instance returns a singleton instance
+
+a = A.instance
+b = A.instance
+a.data = 42
+
+p a.object_id
+p b.object_id  # same as a.object_id
+p a.data       # => 42
+p b.data       # => 42 (same instance)
+```

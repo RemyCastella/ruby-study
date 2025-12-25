@@ -146,5 +146,76 @@ file.chmod(0644)
 file.chown(501, 20)
 p File.basename("testfile")
 p File.dirname("testfile")
-
+p File.birthtime("testfile.txt")
+p File.atime("testfile.txt")
+p File.exist?("testfile.txt")
 File.delete("testfile.txt")
+
+# know the difference between `date`, system("date"), and IO.popen("date")
+result = IO.popen("date")
+p result.read
+
+date = IO.popen("date")
+string_file = StringIO.new(date.read)
+p string_file.read
+string_file.rewind
+p string_file.read
+
+
+require 'json'
+
+data = {
+    username: "coolUser12",
+    email: "email@gmail.com",
+    friends: ["Jason", "John", "James"]
+}
+
+p json = JSON.generate(data) #data.to_json also works
+p JSON.parse(json, symbolize_names: true)
+
+
+require 'uri'
+
+uri = URI.parse("https://9gag.com/trending")
+p uri.scheme
+p uri.host
+p uri.port
+p uri.path
+
+require 'yaml'
+yaml = YAML.dump(data)
+puts yaml
+
+require 'benchmark'
+
+str = "Hello, this is a string!"
+
+Benchmark.bm(10) do |x|
+    x.report("direct"){10_000.times{str.length}}
+    x.report("send"){10_000.times{str.send(:length)}}
+    x.report("eval"){10_000.times{eval("str.length")}}
+end
+
+
+require 'singleton'
+
+class A
+    attr_accessor :data
+    include Singleton
+end
+
+# a = A.new // new becomes private method
+# clone, dupe, etc. are also overwritten
+# instance returns a singleton instance
+
+a = A.instance
+b = A.instance
+a.data = 42
+
+p a.object_id
+p b.object_id
+p a.data
+p b.data
+
+
+
